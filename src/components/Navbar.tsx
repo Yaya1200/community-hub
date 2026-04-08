@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Calendar, Users, Compass, Bell } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, Calendar, Users, Compass, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { to: "/", label: "Home", icon: Compass },
@@ -13,6 +20,13 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
@@ -42,14 +56,45 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-              3
-            </span>
-          </Button>
-          <Button variant="outline" size="sm">Sign In</Button>
-          <Button size="sm">Get Started</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                  3
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuItem>🎉 New event: Spring Hackathon</DropdownMenuItem>
+              <DropdownMenuItem>📅 Tech Talk starts in 2 hours</DropdownMenuItem>
+              <DropdownMenuItem>👥 Photography Club accepted you</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {user.email?.split("@")[0]}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
+                Sign In
+              </Button>
+              <Button size="sm" onClick={() => navigate("/auth")}>
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -77,8 +122,20 @@ const Navbar = () => {
             </Link>
           ))}
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">Sign In</Button>
-            <Button size="sm" className="flex-1">Get Started</Button>
+            {user ? (
+              <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => { setIsOpen(false); navigate("/auth"); }}>
+                  Sign In
+                </Button>
+                <Button size="sm" className="flex-1" onClick={() => { setIsOpen(false); navigate("/auth"); }}>
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
